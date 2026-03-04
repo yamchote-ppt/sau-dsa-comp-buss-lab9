@@ -6,3 +6,6 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Lab manual (teacher copy – not for students)
+Lab09_Manual.tex
