@@ -1,0 +1,346 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{article}
+
+% ---------- Thai + Fonts (XeLaTeX) ----------
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{thai}
+\setotherlanguage{english}
+% หากเครื่องไม่มี TH Sarabun New ให้เปลี่ยนเป็นฟอนต์ไทยที่มีในเครื่อง
+\setmainfont{SarabunLibertinus}[
+Extension=.ttf,
+Path=./,
+Scale=1.2,
+Script=Thai,
+UprightFont = *-Regular,
+BoldFont    = *-Bold,
+ItalicFont  = *-Italic,
+BoldItalicFont = *-BoldItalic
+]
+\newfontfamily\thaifont{SarabunLibertinus}[
+Extension=.ttf,
+Path=./,
+Scale=1.2,
+Script=Thai,
+UprightFont = *-Regular,
+BoldFont    = *-Bold,
+ItalicFont  = *-Italic,
+BoldItalicFont = *-BoldItalic
+]
+\newfontfamily\thaifonttt{SarabunLibertinus}[
+Extension=.ttf,
+Path=./,
+Scale=1.2,
+Script=Thai,
+UprightFont = *-Regular,
+BoldFont    = *-Bold,
+ItalicFont  = *-Italic,
+BoldItalicFont = *-BoldItalic
+]
+\newfontfamily\englishfont{Latin Modern Roman}
+
+% ---------- Layout ----------
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{enumitem}
+\setlist{nosep}
+
+% ---------- Math / tables ----------
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+
+% ---------- Code listing ----------
+\usepackage{listings}
+\usepackage{xcolor}
+\lstdefinestyle{py}{
+	language=Python,
+	basicstyle=\ttfamily\small,
+	numbers=left,
+	numberstyle=\scriptsize,
+	stepnumber=1,
+	numbersep=8pt,
+	showstringspaces=false,
+	breaklines=true,
+	frame=single,
+	tabsize=2,
+	columns=fullflexible
+}
+
+% ---------- Links ----------
+\usepackage[hidelinks]{hyperref}
+
+% ---------- Header ----------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{725103 Data Structures and Algorithms for Business}
+\rhead{Lab 09}
+\cfoot{\thepage}
+
+% ---------- Convenience ----------
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\bigO}{\ensuremath{\mathcal{O}}}
+
+\begin{document}
+	
+	\begin{center}
+		{\Large \textbf{Lab 09: Stack \& Queue Applications}}\\
+		\vspace{0.15em}
+		{\normalsize \textbf{Expression Evaluation (Stack) \& BFS Job Sequencing (Queue)}}\\
+		\vspace{0.35em}
+		{\normalsize 725103 Data Structures and Algorithms \quad | \quad ภาคเรียนที่ 2/2568}
+	\end{center}
+	
+	\vspace{0.5em}
+	แลปนี้จะให้นักศึกษาเริ่มจาก \textbf{OOP ใน Python} แบบ “พอใช้ได้ทันที” จากนั้นฝึกใช้งาน \textbf{LinkedList} ที่เตรียมให้
+	แล้วสร้าง \textbf{Stack} และ \textbf{Queue} ทั้งแบบ \textbf{Array} และแบบ \textbf{LinkedList}
+	ก่อนนำไปประยุกต์ 2 งานสำคัญ:
+	(1) \textbf{Expression Evaluation} ด้วย \textbf{Stack}
+	และ (2) การ “แตกงานเป็นลำดับ” (Job Sequencing) แบบ \textbf{BFS} ด้วย \textbf{Queue}
+	บนโครงสร้าง \textbf{tree} ที่แทนด้วย \textbf{Python dictionary}.
+	
+	\section*{วัตถุประสงค์การเรียนรู้ (LO)}
+	เมื่อทำแลปเสร็จ นักศึกษาสามารถ:
+	\begin{enumerate}[label=\arabic*.]
+		\item ใช้งานแนวคิดพื้นฐานของ \textbf{OOP} ใน Python: class, object, attribute, method
+		\item ใช้งาน \textbf{LinkedList} ที่มีให้ และเติม logic ใน method ที่กำหนดได้
+		\item สร้าง \textbf{Stack ADT} และ \textbf{Queue ADT} ได้อย่างน้อย 2 implementation (Array / LinkedList)
+		\item ทำ \textbf{Expression Evaluation} ของนิพจน์แบบ infix (\code{+ - * /} และวงเล็บ) ด้วย \textbf{Stack}
+		\item ทำ \textbf{Breadth-First Traversal (BFS)} เพื่อจัดลำดับงาน (Job Sequencing) ด้วย \textbf{Queue}
+		%		\item อธิบายเหตุผลการเลือกโครงสร้างข้อมูล และวิเคราะห์ความซับซ้อนเชิงแนวคิดด้วย \textbf{Big-O} ได้
+	\end{enumerate}
+	
+	
+	\section*{โครงสร้างไฟล์แนะนำ}
+	\begin{verbatim}
+		lab09/
+		src/
+		oop_basics.py
+		linked_list.py
+		stack_array.py
+		stack_linkedlist.py
+		queue_array.py
+		queue_linkedlist.py
+		expression_eval.py
+		job_bfs.py
+		report/
+		Lab09_Report.pdf
+	\end{verbatim}
+	
+	\section*{สิ่งที่ต้องส่ง (Deliverables)}
+	\begin{enumerate}[label=\arabic*.]
+		\item โค้ดในโฟลเดอร์ \code{src/} (ครบทุกไฟล์ตามที่กำหนด)
+		\item รายงาน \code{Lab09\_Report.pdf}
+	\end{enumerate}
+	
+	
+	% ==========================================================
+	\section{พื้นฐานการใช้ OOP (Warm-up)}
+	\subsection*{แนวคิดสั้น ๆ}
+	\textbf{class} = พิมพ์เขียว \\
+	\textbf{object} = สิ่งที่สร้างจาก class \\
+	\textbf{attribute} = ข้อมูลใน object \\
+	\textbf{method} = ฟังก์ชันที่ผูกกับ object (รับ {self})
+	
+	\subsection*{งาน 1.1: ทดลองใช้งาน object จาก class ที่ให้ (พาทำ)}
+	ใน {oop\_basics.py} จะมี class ให้แล้ว 3 class ({Player}, {Quest}, {InventoryItem})\\
+	ให้นักศึกษาา:
+	\begin{enumerate}[label=\arabic*.]
+		\item สร้าง object อย่างน้อย 2 ตัวจากแต่ละ class
+		\item เรียกใช้ method ที่ให้ไว้ และพิมพ์สถานะก่อน/หลังเรียก method
+		\item ตอบในรายงาน: \textbf{attribute} กับ \textbf{method} ต่างกันอย่างไร
+	\end{enumerate}
+	
+	\subsection*{งาน 1.2: เติม logic ใน method (พาทำ)}
+	ใน {oop\_basics.py} จะมี method ที่เว้นไว้ดังนี้:
+	\begin{lstlisting}[style=py]
+	class Player:
+		def gain_exp(self, amount: int) -> None:
+		"""
+		เพิ่ม EXP ให้ผู้เล่น ถ้า EXP เกิน threshold ให้ level up
+		"""
+		####### IMPLEMENT HERE ########
+		pass
+	\end{lstlisting}
+	
+	\textbf{เติมเฉพาะ logic} ระหว่าง {IMPLEMENT HERE} โดยเงื่อนไขแนะนำ:
+	\begin{itemize}
+		\item EXP เพิ่มได้ แต่ไม่ให้ติดลบ
+		\item ถ้า EXP $\ge$ threshold ให้ level +1 และลด EXP ลงตาม threshold (วนซ้ำได้)
+	\end{itemize}
+	
+	% ==========================================================
+	\newpage
+	\section{LinkedList (ใช้ class ที่ทำมาให้)}
+	\subsection*{งาน 2: ใช้งาน LinkedList และเติม method 1 ตัว}
+	ใน {linked\_list.py} จะมี {Node} และ {LinkedList} ให้แล้ว (พร้อม method พื้นฐานบางส่วน)\\
+	สิ่งที่นักศึกษาต้องทำ:
+	\begin{enumerate}[label=\arabic*.]
+		\item ทดลอง {addHead}, {addTail}, {to\_list} (หรือ method ที่มีให้แล้วแต่นักศึกษาอยากลอง)
+		\item เติม method ที่เว้นไว้ได้แก่ {find(value)} และ {remove\_first(value)}
+	\end{enumerate}
+	
+	\textbf{สเปกของ \code{find(value)}}
+	\begin{itemize}
+		\item หาโหนดแรกที่มีค่าเท่ากับ {value}
+		\item คืนค่า \code{index} ถ้าลบสำเร็จ, คืน \code{-1} ถ้าไม่พบ
+		\item ต้องจัดการกรณีขอบ: list ว่าง
+	\end{itemize}
+	
+	\textbf{สเปกของ \code{remove\_first(value)}}
+	\begin{itemize}
+		\item ลบโหนดแรกที่มีค่าเท่ากับ {value}
+		\item คืนค่า \code{True} ถ้าลบสำเร็จ, คืน \code{False} ถ้าไม่พบ
+		\item ต้องจัดการกรณีขอบ: list ว่าง / ลบที่หัว / ลบที่กลาง / ลบที่ท้าย
+	\end{itemize}
+	
+	% ==========================================================
+	\newpage
+	\section{สร้าง Stack}
+	\subsection*{งาน 3.1: Stack จาก Array}
+	สร้าง class {StackArray} ใน {stack\_array.py} โดยใช้ {list} เปรียบเสมือนเป็น array เพื่อเป็น storage ภายใน แต่ห้ามใช้ method ที่ติดมาแล้วของ list
+	\begin{itemize}
+		\item {push(x)}, {pop()}, {peek()}, {is\_empty()}, {\_\_len\_\_()}
+		\item {pop()} และ {peek()} ต้อง raise {IndexError} ถ้า stack ว่าง
+	\end{itemize}
+	
+	\subsection*{งาน 3.2: Stack จาก LinkedList}
+	สร้าง class {StackLinkedList} ใน {stack\_linkedlist.py} โดยใช้ {LinkedList} ที่ให้ไว้
+	\begin{itemize}
+		\item คำถาม ควรจะต้อง push/pop ที่หัวของ LinkedList หรือหางของ LinkedList และเพราะอะไร
+	\end{itemize}
+	
+	% ==========================================================
+	\section{สร้าง Queue}
+	\subsection*{งาน 4.1: Queue จาก Array}
+	สร้าง class {QueueArray} ใน {queue\_array.py} โดยใช้ {list} + ตัวชี้ {front\_index}
+	+ ตัวชี้ {rear\_index}
+	\begin{itemize}
+		\item {enqueue(x)}, {dequeue()}, {peek()}, {is\_empty()}, {\_\_len\_\_()}
+		\item {dequeue()} และ {peek()} ต้อง raise {IndexError} ถ้าว่าง
+	\end{itemize}
+	
+	\textbf{ลองคิดก่อน:} ควรจัดการ {front\_index} และ {rear\_index} อย่างไรดี
+	
+	\subsection*{งาน 4.2: Queue จาก LinkedList (ยังไม่ทำ เก็บไว้ทำทีหลัง)}
+	สร้าง class {QueueLinkedList} ใน {queue\_linkedlist.py}
+	\begin{itemize}
+		\item enqueue ที่ \textbf{ท้าย} และ dequeue ที่ \textbf{หัว} 
+	\end{itemize}
+	\textbf{ลองคิดก่อน:} ใช้ LinkedList เลยจะไม่เหมาะกับ queue เพราะอะไร และจะปรับปรุงอัพเกรด LinkedList อย่างไรให้นำมาใช้สร้าง queue ได้
+	
+	% ==========================================================
+	\newpage
+	\section{ใช้ Stack ทำ Expression Evaluation}
+	\subsection*{โจทย์}
+	เขียนฟังก์ชัน {evaluate(expr: str) -> float} ใน {expression\_eval.py} ที่รับนิพจน์แบบ infix เช่น
+	\[
+	(3 + 4) * 2 - 10/5
+	\]
+	รองรับ token: จำนวนเต็ม/ทศนิยม, {+ - * /}, วงเล็บ {( )} และช่องว่าง (อาจมี/ไม่มี)
+	
+	\subsection*{แนวทาง (2 ขั้น)}
+	\begin{enumerate}[label=\arabic*.]
+		\item แปลง infix เป็น postfix (RPN) ด้วย \textbf{operator stack}
+		\item ประเมินค่า postfix ด้วย \textbf{value stack}
+	\end{enumerate}
+	
+	\subsection*{ตาราง precedence (กำหนดให้)}
+	\begin{center}
+		\begin{tabular}{c c}
+			\toprule
+			Operator & Precedence\\
+			\midrule
+			{* /} & 2\\
+			{+ -} & 1\\
+			\bottomrule
+		\end{tabular}
+	\end{center}
+	
+	\subsection*{งาน 5: เติม logic ในส่วนที่เว้นไว้}
+	ในไฟล์จะมีโครงไว้ให้:
+	\begin{lstlisting}[style=py]
+	def infix_to_postfix(tokens: list[str]) -> list[str]:
+		output = []
+		op_stack = StackArray()  # ต้องใช้ stack ที่คุณสร้างเอง
+		for tok in tokens:
+			####### IMPLEMENT HERE ########
+			pass
+			####### IMPLEMENT HERE ########  # pop operators ที่เหลือ
+		return output
+	\end{lstlisting}
+	
+	และ
+	\begin{lstlisting}[style=py]
+	def eval_postfix(postfix: list[str]) -> float:
+		st = StackArray()
+		for tok in postfix:
+			####### IMPLEMENT HERE ########
+			pass
+		return st.pop()
+	\end{lstlisting}
+	
+	\subsection*{ตัวอย่างที่ต้องผ่าน}
+	\begin{enumerate}[label=(\alph*)]
+		\item {"3 + 4 * 2"} $\rightarrow$ 11
+		\item {"(3 + 4) * 2"} $\rightarrow$ 14
+		\item {"10 / (5 - 3)"} $\rightarrow$ 5
+	\end{enumerate}
+	
+	\subsection*{สิ่งที่ต้องใส่ในรายงาน}
+	\begin{itemize}
+		\item trace infix $\rightarrow$ postfix อย่างน้อย 1 ตัวอย่าง (ตาราง)
+		\item trace การคำนวณ postfix อย่างน้อย 1 ตัวอย่าง
+		\item Big-O เชิงแนวคิด: โดยรวม \bigO(n) ตามจำนวน token (อธิบายสั้น ๆ)
+	\end{itemize}
+	
+	% ==========================================================
+	\newpage
+	\section{ใช้ Queue ทำ Job Sequencing}
+	\subsection*{แนวคิด}
+	นึกภาพเกมที่มี \textbf{Quest} หลายอัน: ทำ quest หนึ่งเสร็จแล้วจะปลดล็อก quest ลูก
+	ไม่มีการรวมกลับมาชนกัน (เรียกว่า \textbf{tree}) และนักศึกษาเป็นสายสมดุลคือจะทำ quest ไล่ไปตามลำดับที่เจอก่อน เพราะเจอก่อนน่าจะหมายถึงง่ายกว่าเจอทีหลัง
+	
+	แทน tree ด้วย \textbf{Python dictionary}:
+	\begin{lstlisting}[style=py]
+		quest_tree = {
+			"Start": ["Q1", "Q2"],
+			"Q1": ["Q1.1", "Q1.2"],
+			"Q2": ["Q2.1"],
+			"Q1.1": [],
+			"Q1.2": ["Q1.2.1"],
+			"Q2.1": [],
+			"Q1.2.1": []
+		}
+	\end{lstlisting}
+	
+	\subsection*{เป้าหมาย}
+	เขียน {bfs\_job\_sequence(tree: dict[str, list[str]], start: str) -> list[str]}
+	ให้คืนลำดับแบบ \textbf{BFS} โดยใช้ \textbf{Queue} ที่สร้างขึ้นมา
+	
+	\subsection*{งาน 6: เติม logic ในส่วนที่เว้นไว้}
+	\begin{lstlisting}[style=py]
+	def bfs_job_sequence(tree: dict[str, list[str]], start: str) -> list[str]:
+		q = QueueArray()  # ต้องใช้ queue ที่คุณสร้างเอง
+		order = []
+		####### IMPLEMENT HERE ########
+		return order
+	\end{lstlisting}
+	
+	\subsection*{ตัวอย่างผลลัพธ์}
+	เริ่ม {"Start"}:
+	\begin{verbatim}
+		["Start", "Q1", "Q2", "Q1.1", "Q1.2", "Q2.1", "Q1.2.1"]
+	\end{verbatim}
+	
+	\subsection*{สิ่งที่ต้องใส่ในรายงาน}
+	\begin{itemize}
+		\item วาดภาพ tree อย่างน้อย 1 ตัวอย่าง (วาดมือได้)
+		\item ทำ trace การทำงานของ queue อย่างน้อย 6 step (enqueue/dequeue)
+		\item Big-O เชิงแนวคิด: BFS คือ \bigO(V+E) และใน tree เป็น \bigO(n) (อธิบายสั้น ๆ)
+	\end{itemize}
+	
+\end{document}
