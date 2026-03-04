@@ -1,0 +1,9 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Common editor / OS noise
+.vscode/
+.DS_Store
+Thumbs.db
+Lab09_Manual.tex
